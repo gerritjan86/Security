@@ -17,11 +17,14 @@ namespace WebAppSecurity.Controllers
 			return View();
 		}
 
-		public IActionResult Login()
+		public IActionResult Login(Account account)
 		{
-			return View();
+			return View(account);
 		}
 
+		public IActionResult LoggedIn() => View();
+
+		public IActionResult LoggedOut() => View();
 
 		public IActionResult UserRegistrationCompleted()
 		{

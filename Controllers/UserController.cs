@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
@@ -21,9 +22,57 @@ namespace WebAppSecurity.Controllers
             _context = context;
         }
 
+		//GET User/Login
+		//Login view where user can fill in his emailaddress and password
+		[HttpGet]
+		public IActionResult Login() => View();
 
-        // GET: User/Create
-        public IActionResult Create()
+
+		//POST User/Login
+		[AllowAnonymous]
+		[ValidateAntiForgeryToken]
+		[HttpPost]
+		public IActionResult Login([Bind("Email,PasswordHash")] User user)
+		{
+			User userDb = _context.Users.FirstOrDefault(u => u.Email.Equals(user.Email));
+
+			if (userDb == null)
+			{
+				ModelState.AddModelError(string.Empty, "Try again!");
+				return View(user);
+			}
+
+			if (user.Email.Equals(string.Empty) || user.PasswordHash.Equals(string.Empty))
+			{
+				ModelState.AddModelError(string.Empty, "Try again!");
+				return View(user);
+			}
+
+			if (!user.Email.Equals(string.Empty) && !user.PasswordHash.Equals(string.Empty))
+			{
+				PasswordHasher<User> passwordHasher = new PasswordHasher<User>();
+				PasswordVerificationResult verificationResult = passwordHasher.VerifyHashedPassword(userDb, userDb.PasswordHash, user.PasswordHash);
+
+				if (verificationResult == PasswordVerificationResult.Success)
+				{
+					return RedirectToAction("LoggedIn", "Home");
+				}
+				else
+				{
+					ModelState.AddModelError(string.Empty, "Try again!");
+					return View(user);
+				}
+			}
+
+			ModelState.AddModelError(string.Empty, "Try again!");
+			return View(user);
+			//return RedirectToAction("Login", "Home", user);
+		}
+
+
+
+		// GET: User/Create
+		public IActionResult Create()
         {
             return View();
         }
