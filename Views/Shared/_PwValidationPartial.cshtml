@@ -1,0 +1,30 @@
+<script>
+    function validate() {
+        var email = document.getElementById('email').value;
+        var password = document.getElementById('password').value;
+
+        var account = {
+            email: email,
+            password: password
+        }
+
+        if (email.length == 0 || password.length == 0) {
+            alert("Email and password required!")
+        } else {
+            $.ajax({
+                type: "POST",
+                contentType: "application/json",
+                url: '@Url.Action("Validate", "Account")',
+                data: JSON.stringify(account),
+                error: function () {
+                    console.log("kom in de error terecht 1");
+                    alert("There is a Problem, Try Again! (1)");
+                },
+                success: function () {
+                    console.log("kom in de success terecht 2");
+                    window.location.href = '@Url.Action("Index","User")';
+                }
+            });
+        }
+    }
+</script>

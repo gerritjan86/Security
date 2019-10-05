@@ -1,0 +1,31 @@
+﻿@{
+    ViewData["Title"] = "Login";
+}
+
+<h1>Login</h1>
+
+<div class="row">
+    <div class="col-md-4">
+        <form>
+            <div class="form-group">
+                <input name="email" id="email" class="form-control" placeholder="Email" />
+                <span id="emailError" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <input type="password" name="password" class="form-control" id="password" placeholder="Password" />
+                <span id="passwordError" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <input id="loginButton" type="button" value="Login" class="btn btn-primary" onclick="validate()" />
+            </div>
+        </form>
+    </div>
+</div>
+
+
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+    @{await Html.RenderPartialAsync("_PwValidationPartial");}
+}
+
