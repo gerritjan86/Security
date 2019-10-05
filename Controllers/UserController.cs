@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
@@ -20,35 +21,13 @@ namespace WebAppSecurity.Controllers
             _context = context;
         }
 
-        // GET: User
-        public async Task<IActionResult> Index()
-        {
-            return View(await _context.Users.ToListAsync());
-        }
-
-        // GET: User/Details/5
-        public async Task<IActionResult> Details(int? id)
-        {
-            if (id == null)
-            {
-                return NotFound();
-            }
-
-            var user = await _context.Users
-                .FirstOrDefaultAsync(m => m.Id == id);
-            if (user == null)
-            {
-                return NotFound();
-            }
-
-            return View(user);
-        }
 
         // GET: User/Create
         public IActionResult Create()
         {
             return View();
         }
+
 
         // POST: User/Create
         // To protect from overposting attacks, please enable the specific properties you want to bind to, for 
@@ -59,19 +38,99 @@ namespace WebAppSecurity.Controllers
         {
             if (ModelState.IsValid)
             {
-				var hasher = new PasswordHasher<User>();
 				var password = user.PasswordHash;
-				user.PasswordHash = hasher.HashPassword(user, password);
-				user.Role = "User";
-                _context.Add(user);
-                await _context.SaveChangesAsync();
-                return RedirectToAction("UserRegistrationCompleted","Home");
+				if (ValidatePassword(password))
+				{
+					user.Role = "User";
+					var hasher = new PasswordHasher<User>();
+					user.PasswordHash = hasher.HashPassword(user, password);
+					try
+					{
+						_context.Add(user);
+						await _context.SaveChangesAsync();
+						return RedirectToAction("UserRegistrationCompleted", "Home");
+					}
+					catch (Exception)
+					{
+						return View(user);
+					}	
+				}
+				else
+				{
+					ModelState.AddModelError(string.Empty, "Password must be at least 8 charachters containing uppercase and lowercase letters and at least one number and one special character!");
+					return View(user);
+				}
+                
             }
             return View(user);
         }
 
-        // GET: User/Edit/5
-        public async Task<IActionResult> Edit(int? id)
+
+		//check password requirements
+		private static bool ValidatePassword(string password)
+		{
+			const int MIN_LENGTH = 8;
+
+			bool meetsLengthRequirements = password.Length >= MIN_LENGTH;
+			bool hasUpperCaseLetter = false;
+			bool hasLowerCaseLetter = false;
+			bool hasDecimalDigit = false;
+			bool hasSpecialCharacter = false;
+
+			if (meetsLengthRequirements)
+			{
+				foreach (char c in password)
+				{
+					if (char.IsUpper(c)) hasUpperCaseLetter = true;
+					else if (char.IsLower(c)) hasLowerCaseLetter = true;
+					else if (char.IsDigit(c)) hasDecimalDigit = true;
+					else if (Regex.IsMatch(c.ToString(), @"[!#$%&'()*+,-.:;<=>?@[\\\]{}^_`|~]")) hasSpecialCharacter = true;
+				}
+			}
+
+			bool isValid = meetsLengthRequirements
+						&& hasUpperCaseLetter
+						&& hasLowerCaseLetter
+						&& hasDecimalDigit
+						&& hasSpecialCharacter
+						;
+			return isValid;
+		}
+
+
+
+
+
+
+
+		// GET: User
+		public async Task<IActionResult> Index()
+		{
+			return View(await _context.Users.ToListAsync());
+		}
+
+		// GET: User/Details/5
+		public async Task<IActionResult> Details(int? id)
+		{
+			if (id == null)
+			{
+				return NotFound();
+			}
+
+			var user = await _context.Users
+				.FirstOrDefaultAsync(m => m.Id == id);
+			if (user == null)
+			{
+				return NotFound();
+			}
+
+			return View(user);
+		}
+
+
+
+		// GET: User/Edit/5
+		public async Task<IActionResult> Edit(int? id)
         {
             if (id == null)
             {
