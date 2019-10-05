@@ -13,6 +13,7 @@ using Microsoft.Extensions.DependencyInjection;
 using WebAppSecurity.DAL;
 using Pomelo.EntityFrameworkCore.MySql;
 using Pomelo.EntityFrameworkCore.MySql.Infrastructure;
+using Microsoft.AspNetCore.Authentication.Cookies;
 
 namespace WebAppSecurity
 {
@@ -48,6 +49,8 @@ namespace WebAppSecurity
 				mysqlOptions => { mysqlOptions.ServerVersion(new Version(5, 7, 17), ServerType.MariaDb); }
 			));
 
+			services.AddAuthentication(
+				CookieAuthenticationDefaults.AuthenticationScheme).AddCookie(CookieAuthenticationDefaults.AuthenticationScheme);
 
 			services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Version_2_2);
 		}
@@ -69,6 +72,7 @@ namespace WebAppSecurity
 			app.UseHttpsRedirection();
 			app.UseStaticFiles();
 			app.UseCookiePolicy();
+			app.UseAuthentication();
 
 			app.UseMvc(routes =>
 			{
