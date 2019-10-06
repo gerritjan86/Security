@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Threading.Tasks;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using WebAppSecurity.DAL;
 using WebAppSecurity.Models;
@@ -12,20 +13,19 @@ namespace WebAppSecurity.Controllers
 	public class HomeController : Controller
 	{
 
+		[AllowAnonymous]
 		public IActionResult Index()
 		{
 			return View();
 		}
 
-		public IActionResult Login(Account account)
-		{
-			return View(account);
-		}
-
+		[AllowAnonymous]
 		public IActionResult LoggedIn() => View();
 
+		[AllowAnonymous]
 		public IActionResult LoggedOut() => View();
 
+		[AllowAnonymous]
 		public IActionResult UserRegistrationCompleted()
 		{
 			return View();

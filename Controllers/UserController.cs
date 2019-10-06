@@ -16,6 +16,7 @@ namespace WebAppSecurity.Controllers
     public class UserController : Controller
     {
         private readonly SecurityContext _context;
+		private readonly Authentication _auth = new Authentication();
 
         public UserController(SecurityContext context)
         {
@@ -24,6 +25,7 @@ namespace WebAppSecurity.Controllers
 
 		//GET User/Login
 		//Login view where user can fill in his emailaddress and password
+		[AllowAnonymous]
 		[HttpGet]
 		public IActionResult Login() => View();
 
@@ -32,7 +34,8 @@ namespace WebAppSecurity.Controllers
 		[AllowAnonymous]
 		[ValidateAntiForgeryToken]
 		[HttpPost]
-		public IActionResult Login([Bind("Email,PasswordHash")] User user)
+		public async Task<IActionResult> LoginAsync([Bind("Email,PasswordHash")] User user)
+		//public IActionResult Login([Bind("Email,PasswordHash")] User user)
 		{
 			User userDb = _context.Users.FirstOrDefault(u => u.Email.Equals(user.Email));
 
@@ -55,7 +58,29 @@ namespace WebAppSecurity.Controllers
 
 				if (verificationResult == PasswordVerificationResult.Success)
 				{
-					return RedirectToAction("LoggedIn", "Home");
+					try
+					{
+						//return RedirectToAction("LoggedIn", "Home");
+						//authentication
+						//await _auth.SignIn(HttpContext, userDb);
+						//return RedirectToAction("LoggedIn", "Home");
+
+						bool signIn = await _auth.SignIn(HttpContext, userDb);
+						if (signIn)
+						{
+							return RedirectToAction("LoggedIn", "Home");
+						}
+						else
+						{
+							ModelState.AddModelError(string.Empty, "Try again!");
+							return View(user);
+						}
+					}
+					catch (Exception)
+					{
+						ModelState.AddModelError(string.Empty, "Try again!");
+						return View(user);
+					}
 				}
 				else
 				{
@@ -66,12 +91,47 @@ namespace WebAppSecurity.Controllers
 
 			ModelState.AddModelError(string.Empty, "Try again!");
 			return View(user);
-			//return RedirectToAction("Login", "Home", user);
+		}
+
+		[Authorize(Roles = "Admin")]
+		[HttpGet]
+		public IActionResult GetAll()
+		{
+			var users = this.GetAllUsers(true);
+			return View(users);
 		}
 
 
+		[Authorize(Roles = "Admin, User")]
+		[HttpGet]
+		public IActionResult ShowUsers()
+		{
+			var users = this.GetAllUsers(false);
+			return View(users);
+		}
+
+
+		public List<User> GetAllUsers(bool admin)
+		{
+			if (admin)
+			{
+				var userList = from user in _context.Users
+							   select new User { FirstName = user.FirstName, LastName = user.LastName, Email = user.Email, Role = user.Role };
+				var users = userList.ToList<User>();
+				return users;
+			}
+			else
+			{
+				var userList = from user in _context.Users
+							   select new User { FirstName = user.FirstName, LastName = user.LastName };
+				var users = userList.ToList<User>();
+				return users;
+			}
+		}
+
 
 		// GET: User/Create
+		[AllowAnonymous]
 		public IActionResult Create()
         {
             return View();
@@ -82,7 +142,8 @@ namespace WebAppSecurity.Controllers
         // To protect from overposting attacks, please enable the specific properties you want to bind to, for 
         // more details see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
-        [ValidateAntiForgeryToken]
+		[AllowAnonymous]
+		[ValidateAntiForgeryToken]
         public async Task<IActionResult> Create([Bind("Id,FirstName,LastName,Email,PasswordHash")] User user)
         {
             if (ModelState.IsValid)
@@ -153,12 +214,14 @@ namespace WebAppSecurity.Controllers
 
 
 		// GET: User
+		[Authorize(Roles = "Admin")]
 		public async Task<IActionResult> Index()
 		{
 			return View(await _context.Users.ToListAsync());
 		}
 
 		// GET: User/Details/5
+		[Authorize(Roles = "Admin")]
 		public async Task<IActionResult> Details(int? id)
 		{
 			if (id == null)
@@ -179,6 +242,7 @@ namespace WebAppSecurity.Controllers
 
 
 		// GET: User/Edit/5
+		[Authorize(Roles = "Admin")]
 		public async Task<IActionResult> Edit(int? id)
         {
             if (id == null)
@@ -199,7 +263,8 @@ namespace WebAppSecurity.Controllers
         // more details see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(int id, [Bind("Id,FirstName,LastName,Email,PasswordHash")] User user)
+		[Authorize(Roles = "Admin")]
+		public async Task<IActionResult> Edit(int id, [Bind("Id,FirstName,LastName,Email,PasswordHash")] User user)
         {
             if (id != user.Id)
             {
@@ -229,8 +294,9 @@ namespace WebAppSecurity.Controllers
             return View(user);
         }
 
-        // GET: User/Delete/5
-        public async Task<IActionResult> Delete(int? id)
+		// GET: User/Delete/5
+		[Authorize(Roles = "Admin")]
+		public async Task<IActionResult> Delete(int? id)
         {
             if (id == null)
             {
@@ -250,7 +316,8 @@ namespace WebAppSecurity.Controllers
         // POST: User/Delete/5
         [HttpPost, ActionName("Delete")]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> DeleteConfirmed(int id)
+		[Authorize(Roles = "Admin")]
+		public async Task<IActionResult> DeleteConfirmed(int id)
         {
             var user = await _context.Users.FindAsync(id);
             _context.Users.Remove(user);

@@ -22,6 +22,7 @@ namespace WebAppSecurity.Models
 		public string Email { get; set; }
 
 		[Required]
+		[Display(Name = "Password")]
 		public string PasswordHash { get; set; }
 
 		public string Role { get; set; }

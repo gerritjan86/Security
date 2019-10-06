@@ -37,20 +37,29 @@ namespace WebAppSecurity
 			});
 
 
-			/// pomelo installeren en dan 
-			//services.AddDbContext<SecurityContext>(options => options.UseSqlServer(
-			//	Configuration.GetConnectionString("DefaultConnection")
-			//));
+			//services.ConfigureApplicationCookie(options => options.LoginPath = "/Home");
 
+
+			//Pomelo installeren en dan  options.UseMySql gebruiken in plaats van options.UseSqlServer
 			//AddDbContext of AddDbContextPool???
-
 			services.AddDbContext<SecurityContext>(options => options.UseMySql(
 				Configuration.GetConnectionString("DefaultConnectionMaria"),
 				mysqlOptions => { mysqlOptions.ServerVersion(new Version(5, 7, 17), ServerType.MariaDb); }
 			));
 
-			services.AddAuthentication(
-				CookieAuthenticationDefaults.AuthenticationScheme).AddCookie(CookieAuthenticationDefaults.AuthenticationScheme);
+
+			//handige link: https://docs.microsoft.com/en-us/aspnet/core/migration/1x-to-2x/identity-2x?view=aspnetcore-3.0
+			services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
+					.AddCookie(CookieAuthenticationDefaults.AuthenticationScheme, options =>
+					{
+						options.LoginPath = "/User/Login";
+					});
+
+			//services.AddSession(options =>
+			//{
+			//	options.IdleTimeout = TimeSpan.FromMinutes(20);
+			//	options.Cookie.HttpOnly = true;
+			//});
 
 			services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Version_2_2);
 		}
