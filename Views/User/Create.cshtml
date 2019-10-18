@@ -42,10 +42,10 @@
             </div>
             <div class="form-group">
                 <div class="input-group-prepend">
-                    <img id="img-captcha" src="~/get-captcha-image" />
-                </div>
-                <input type="text" class="form-control" placeholder="Captcha Code" asp-for="CaptchaCode" maxlength="4" />
-                <span asp-validation-for="CaptchaCode" class="text-danger"></span>
+                    <img id="img-captcha" src="~/get-captcha-image" onclick="resetCaptchaImage()" />
+                    <input type="text" class="form-control" placeholder="Captcha Code" asp-for="CaptchaCode" maxlength="4" />
+                    <span asp-validation-for="CaptchaCode" class="text-danger"></span>
+                </div>  
             </div>
             <div class="form-group">
                 <!-- disabled -->
@@ -63,9 +63,9 @@
 @section Scripts {
     @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
     <script>
-        document.getElementById('img-captcha').click(function () {
-            resetCaptchaImage
-        })
+        //document.getElementById('img-captcha').click(function () {
+        //    resetCaptchaImage();
+        //})
 
         function resetCaptchaImage() {
             d = new Date();
