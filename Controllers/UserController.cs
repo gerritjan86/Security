@@ -10,6 +10,7 @@ using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using WebAppSecurity.DAL;
 using WebAppSecurity.Models;
+using WebAppSecurity.Models.Captcha;
 
 namespace WebAppSecurity.Controllers
 {
@@ -144,7 +145,7 @@ namespace WebAppSecurity.Controllers
         [HttpPost]
 		[AllowAnonymous]
 		[ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create([Bind("Id,FirstName,LastName,Email,PasswordHash")] User user)
+        public async Task<IActionResult> Create([Bind("Id,FirstName,LastName,Email,PasswordHash,CaptchaCode")] User user)
         {
             if (ModelState.IsValid)
             {
@@ -154,16 +155,26 @@ namespace WebAppSecurity.Controllers
 					user.Role = "User";
 					var hasher = new PasswordHasher<User>();
 					user.PasswordHash = hasher.HashPassword(user, password);
-					try
+
+					if (!Captcha.ValidateCaptchaCode(user.CaptchaCode, HttpContext))
 					{
-						_context.Add(user);
-						await _context.SaveChangesAsync();
-						return RedirectToAction("UserRegistrationCompleted", "Home");
+						try
+						{
+							_context.Add(user);
+							await _context.SaveChangesAsync();
+							return RedirectToAction("UserRegistrationCompleted", "Home");
+						}
+						catch (Exception)
+						{
+							return View(user);
+						}
 					}
-					catch (Exception)
+					else
 					{
+						ModelState.AddModelError(string.Empty, "Wrong Captcha Code. Try again!");
 						return View(user);
-					}	
+					}
+						
 				}
 				else
 				{

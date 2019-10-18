@@ -41,6 +41,13 @@
                 <span id="confirmError" class="text-danger"></span>
             </div>
             <div class="form-group">
+                <div class="input-group-prepend">
+                    <img id="img-captcha" src="~/get-captcha-image" />
+                </div>
+                <input type="text" class="form-control" placeholder="Captcha Code" asp-for="CaptchaCode" maxlength="4" />
+                <span asp-validation-for="CaptchaCode" class="text-danger"></span>
+            </div>
+            <div class="form-group">
                 <!-- disabled -->
                 <input id="submitButton" type="submit" value="Create" class="btn btn-primary" disabled />
             </div>
@@ -56,6 +63,15 @@
 @section Scripts {
     @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
     <script>
+        document.getElementById('img-captcha').click(function () {
+            resetCaptchaImage
+        })
+
+        function resetCaptchaImage() {
+            d = new Date();
+            document.getElementById('img-captcha').setAttribute('src', '/get-captcha-image?' + d.getTime());
+        }
+
         function validatePassword() {
             var password = document.getElementById('pw').value;
             var passwordConfirm = document.getElementById('confirmPw').value;

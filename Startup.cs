@@ -36,10 +36,6 @@ namespace WebAppSecurity
 				options.MinimumSameSitePolicy = SameSiteMode.None;
 			});
 
-
-			//services.ConfigureApplicationCookie(options => options.LoginPath = "/Home");
-
-
 			//Pomelo installeren en dan  options.UseMySql gebruiken in plaats van options.UseSqlServer
 			//AddDbContext of AddDbContextPool???
 			services.AddDbContext<SecurityContext>(options => options.UseMySql(
@@ -55,11 +51,14 @@ namespace WebAppSecurity
 						options.LoginPath = "/User/Login";
 					});
 
-			//services.AddSession(options =>
-			//{
-			//	options.IdleTimeout = TimeSpan.FromMinutes(20);
-			//	options.Cookie.HttpOnly = true;
-			//});
+
+			// Need this service for the Captcha to work
+			services.AddSession(options =>
+			{
+				options.IdleTimeout = TimeSpan.FromMinutes(20);
+				options.Cookie.HttpOnly = true;
+			});
+			services.AddMemoryCache();
 
 			services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Version_2_2);
 		}
@@ -82,6 +81,7 @@ namespace WebAppSecurity
 			app.UseStaticFiles();
 			app.UseCookiePolicy();
 			app.UseAuthentication();
+			app.UseSession();
 
 			app.UseMvc(routes =>
 			{

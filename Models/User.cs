@@ -25,6 +25,9 @@ namespace WebAppSecurity.Models
 		[Display(Name = "Password")]
 		public string PasswordHash { get; set; }
 
+		[StringLength(4, MinimumLength = 4)]
+		public string CaptchaCode { get; set; }
+
 		public string Role { get; set; }
 
 		public string Token { get; set; }
