@@ -10,4 +10,19 @@
     This is my web application for our security course.
 </p>
 
+@if (User?.Identity?.IsAuthenticated ?? false)
+{
+    <p>
+        <b>Dit ziet alleen een ingelogde gebruiker...</b>
+    </p>
+}
+
+@if (User?.IsInRole("Admin") ?? false)
+{
+    <p>
+        <b>Dit ziet alleen een admin</b>
+    </p>
+}
+
+
 

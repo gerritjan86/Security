@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
@@ -34,9 +35,8 @@ namespace WebAppSecurity.Controllers
 		//POST User/Login
 		[AllowAnonymous]
 		[ValidateAntiForgeryToken]
-		[HttpPost]
+		[HttpPost, ActionName("Login")]
 		public async Task<IActionResult> LoginAsync([Bind("Email,PasswordHash")] User user)
-		//public IActionResult Login([Bind("Email,PasswordHash")] User user)
 		{
 			User userDb = _context.Users.FirstOrDefault(u => u.Email.Equals(user.Email));
 
@@ -61,11 +61,6 @@ namespace WebAppSecurity.Controllers
 				{
 					try
 					{
-						//return RedirectToAction("LoggedIn", "Home");
-						//authentication
-						//await _auth.SignIn(HttpContext, userDb);
-						//return RedirectToAction("LoggedIn", "Home");
-
 						bool signIn = await _auth.SignIn(HttpContext, userDb);
 						if (signIn)
 						{
@@ -135,7 +130,7 @@ namespace WebAppSecurity.Controllers
 		[AllowAnonymous]
 		public IActionResult Create()
         {
-            return View();
+			return View();
         }
 
 
@@ -156,7 +151,7 @@ namespace WebAppSecurity.Controllers
 					var hasher = new PasswordHasher<User>();
 					user.PasswordHash = hasher.HashPassword(user, password);
 
-					if (!Captcha.ValidateCaptchaCode(user.CaptchaCode, HttpContext))
+					if (Captcha.ValidateCaptchaCode(user.CaptchaCode, HttpContext))
 					{
 						try
 						{

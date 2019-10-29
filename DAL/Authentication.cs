@@ -31,6 +31,7 @@ namespace WebAppSecurity.DAL
 		{
 			ClaimsIdentity identity = new ClaimsIdentity(this.GetUserClaims(user), CookieAuthenticationDefaults.AuthenticationScheme);
 			ClaimsPrincipal principal = new ClaimsPrincipal(identity);
+			await httpContext.SignOutAsync();
 			await httpContext.SignInAsync(CookieAuthenticationDefaults.AuthenticationScheme, principal);
 			return true;
 		}
