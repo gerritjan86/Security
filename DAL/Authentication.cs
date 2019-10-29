@@ -31,11 +31,16 @@ namespace WebAppSecurity.DAL
 		{
 			ClaimsIdentity identity = new ClaimsIdentity(this.GetUserClaims(user), CookieAuthenticationDefaults.AuthenticationScheme);
 			ClaimsPrincipal principal = new ClaimsPrincipal(identity);
-			await httpContext.SignOutAsync();
+			//await httpContext.SignOutAsync();
 			await httpContext.SignInAsync(CookieAuthenticationDefaults.AuthenticationScheme, principal);
 			return true;
 		}
 
+		public async Task<bool> SignOut(HttpContext httpContext)
+		{
+			await httpContext.SignOutAsync();
+			return true;
+		}
 
 		private IEnumerable<Claim> GetUserClaims(User user)
 		{
@@ -59,10 +64,10 @@ namespace WebAppSecurity.DAL
 		}
 
 
-		public async void SignOut(HttpContext httpContext)
-		{
-			await httpContext.SignOutAsync();
-		}
+		//public async void SignOut(HttpContext httpContext)
+		//{
+		//	await httpContext.SignOutAsync();
+		//}
 
 
 

@@ -64,10 +64,6 @@
 @section Scripts {
     @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
     <script>
-        //document.getElementById('img-captcha').click(function () {
-        //    resetCaptchaImage();
-        //})
-
         function resetCaptchaImage() {
             d = new Date();
             document.getElementById('img-captcha').setAttribute('src', '/get-captcha-image?' + d.getTime());
