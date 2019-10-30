@@ -27,7 +27,7 @@ namespace WebAppSecurity.DAL
 		{
 			ClaimsIdentity identity = new ClaimsIdentity(this.GetUserClaims(user), CookieAuthenticationDefaults.AuthenticationScheme);
 			ClaimsPrincipal principal = new ClaimsPrincipal(identity);
-			//await httpContext.SignOutAsync();
+			await httpContext.SignOutAsync();
 			await httpContext.SignInAsync(CookieAuthenticationDefaults.AuthenticationScheme, principal);
 			return true;
 		}
@@ -37,7 +37,7 @@ namespace WebAppSecurity.DAL
 		{
 			using (var con = new MySqlConnection(GetConnectionString()))
 			{
-				string queryString = "SELECT Id, Email, FirstName, LastName, PasswordHash, Role FROM users WHERE Email=@Email";
+				string queryString = "SELECT * FROM users WHERE Email=@Email";
 
 				con.Open();
 				MySqlCommand sqlCmd = new MySqlCommand(queryString, con);

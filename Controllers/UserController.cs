@@ -18,7 +18,6 @@ namespace WebAppSecurity.Controllers
     public class UserController : Controller
     {
         private readonly SecurityContext _context;
-		private readonly Authentication _auth = new Authentication();
 		private readonly UserManager _userManager = new UserManager(); //DAL
 
         public UserController(SecurityContext context)
@@ -39,7 +38,6 @@ namespace WebAppSecurity.Controllers
 		[HttpPost, ActionName("Login")]
 		public async Task<IActionResult> LoginAsync([Bind("Email,Password")] LoginModel loginModel)
 		{
-			//User userDb = _context.Users.FirstOrDefault(u => u.Email.Equals(loginModel.Email));
 			User userDb = _userManager.GetUser(loginModel);
 
 			if (userDb == null)
@@ -57,14 +55,13 @@ namespace WebAppSecurity.Controllers
 			if (!loginModel.Email.Equals(string.Empty) && !loginModel.Password.Equals(string.Empty))
 			{
 				PasswordHasher<User> passwordHasher = new PasswordHasher<User>();
-				string hash = passwordHasher.HashPassword(userDb, loginModel.Password);
 				PasswordVerificationResult verificationResult = passwordHasher.VerifyHashedPassword(userDb, userDb.PasswordHash, loginModel.Password);
-				//verificationResult == PasswordVerificationResult.Success
+
 				if (verificationResult == PasswordVerificationResult.Success)
 				{
 					try
 					{
-						bool signIn = await _auth.SignIn(HttpContext, userDb);
+						bool signIn = await _userManager.SignIn(HttpContext, userDb);
 						if (signIn)
 						{
 							return RedirectToAction("LoggedIn", "Home");
@@ -94,7 +91,7 @@ namespace WebAppSecurity.Controllers
 
 		public async Task<IActionResult> Logout()
 		{
-			bool signOut = await _auth.SignOut(HttpContext);
+			bool signOut = await _userManager.SignOut(HttpContext);
 			if (signOut)
 			{
 				return RedirectToAction("LoggedOut", "Home");
