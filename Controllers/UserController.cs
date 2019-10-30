@@ -19,6 +19,7 @@ namespace WebAppSecurity.Controllers
     {
         private readonly SecurityContext _context;
 		private readonly Authentication _auth = new Authentication();
+		private readonly UserManager _userManager = new UserManager(); //DAL
 
         public UserController(SecurityContext context)
         {
