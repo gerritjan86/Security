@@ -26,7 +26,7 @@ namespace WebAppSecurity.Controllers
         }
 
 		//GET User/Login
-		//Login view where user can fill in his emailaddress and password
+		//Login view where user can fill in emailaddress and password
 		[AllowAnonymous]
 		[HttpGet]
 		public IActionResult Login() => View();
@@ -40,19 +40,7 @@ namespace WebAppSecurity.Controllers
 		{
 			User userDb = _userManager.GetUser(loginModel);
 
-			if (userDb == null)
-			{
-				ModelState.AddModelError(string.Empty, "Try again!");
-				return View(loginModel);
-			}
-
-			if (loginModel.Email.Equals(string.Empty) || loginModel.Password.Equals(string.Empty))
-			{
-				ModelState.AddModelError(string.Empty, "Try again!");
-				return View(loginModel);
-			}
-
-			if (!loginModel.Email.Equals(string.Empty) && !loginModel.Password.Equals(string.Empty))
+			if (!loginModel.Email.Equals(string.Empty) && !loginModel.Password.Equals(string.Empty) && userDb != null && userDb.Id != 0)
 			{
 				PasswordHasher<User> passwordHasher = new PasswordHasher<User>();
 				PasswordVerificationResult verificationResult = passwordHasher.VerifyHashedPassword(userDb, userDb.PasswordHash, loginModel.Password);

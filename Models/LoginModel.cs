@@ -10,6 +10,7 @@ namespace WebAppSecurity.Models
 	{
 		[Required]
 		[UIHint("email")]
+		[EmailAddress]
 		public string Email { get; set; }
 		[Required]
 		[UIHint("password")]

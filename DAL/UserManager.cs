@@ -32,6 +32,12 @@ namespace WebAppSecurity.DAL
 			return true;
 		}
 
+		public async Task<bool> SignOut(HttpContext httpContext)
+		{
+			await httpContext.SignOutAsync();
+			return true;
+		}
+
 
 		public User GetUser(LoginModel loginModel)
 		{
@@ -56,16 +62,10 @@ namespace WebAppSecurity.DAL
 				}
 
 				con.Close();
-
 				return userModel;
 			}
 		}
 
-		public async Task<bool> SignOut(HttpContext httpContext)
-		{
-			await httpContext.SignOutAsync();
-			return true;
-		}
 
 		private IEnumerable<Claim> GetUserClaims(User user)
 		{
