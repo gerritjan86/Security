@@ -74,18 +74,10 @@ namespace WebAppSecurity.DAL
 			claims.Add(new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()));
 			claims.Add(new Claim(ClaimTypes.Name, user.FirstName + " " + user.LastName));
 			claims.Add(new Claim(ClaimTypes.Email, user.Email));
-			claims.AddRange(this.GetUserRoleClaims(user));
-			return claims;
-		}
-
-
-		private IEnumerable<Claim> GetUserRoleClaims(User user)
-		{
-			List<Claim> claims = new List<Claim>();
-
-			claims.Add(new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()));
 			claims.Add(new Claim(ClaimTypes.Role, user.Role));
 			return claims;
 		}
+
+
 	}
 }
