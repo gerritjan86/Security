@@ -142,11 +142,10 @@ namespace WebAppSecurity.Controllers
         [HttpPost]
 		[AllowAnonymous]
 		[ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create([Bind("FirstName,LastName,Email,Password,ControlPassword,CaptchaCode")] RegisterModel registerModel)
-        {
+        public IActionResult Create([Bind("FirstName,LastName,Email,Password,ControlPassword,CaptchaCode")] RegisterModel registerModel)
+		{
             if (ModelState.IsValid)
             {
-				//var password = user.PasswordHash;
 				if(registerModel.Password.Equals(registerModel.ControlPassword))
 				{
 					if (ValidatePassword(registerModel.Password))
@@ -157,17 +156,14 @@ namespace WebAppSecurity.Controllers
 							{
 								User user = new User
 								{
-									CaptchaCode = "AAAA",
-									Email = registerModel.Email,
 									FirstName = registerModel.FirstName,
 									LastName = registerModel.LastName,
+									Email = registerModel.Email,
 									Role = "User",
 								};
 								var hasher = new PasswordHasher<User>();
 								user.PasswordHash = hasher.HashPassword(user, registerModel.Password);
-
-								_context.Add(user);
-								await _context.SaveChangesAsync();
+								_userManager.AddUser(user);
 								return RedirectToAction("UserRegistrationCompleted", "Home");
 							}
 							catch (Exception)
@@ -180,7 +176,6 @@ namespace WebAppSecurity.Controllers
 							ModelState.AddModelError(string.Empty, "Wrong Captcha Code. Try again!");
 							return View(registerModel);
 						}
-
 					}
 					else
 					{

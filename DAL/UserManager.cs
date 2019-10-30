@@ -41,12 +41,12 @@ namespace WebAppSecurity.DAL
 
 		public User GetUser(LoginModel loginModel)
 		{
-			using (var con = new MySqlConnection(GetConnectionString()))
+			using (var conn = new MySqlConnection(GetConnectionString()))
 			{
 				string queryString = "SELECT * FROM users WHERE Email=@Email";
 
-				con.Open();
-				MySqlCommand sqlCmd = new MySqlCommand(queryString, con);
+				conn.Open();
+				MySqlCommand sqlCmd = new MySqlCommand(queryString, conn);
 				sqlCmd.Parameters.AddWithValue("@Email", loginModel.Email);
 				MySqlDataReader rdr = sqlCmd.ExecuteReader(CommandBehavior.SingleRow);
 				var userModel = new User();
@@ -61,8 +61,28 @@ namespace WebAppSecurity.DAL
 					userModel.Role = rdr["Role"].ToString();
 				}
 
-				con.Close();
+				conn.Close();
 				return userModel;
+			}
+		}
+
+		public void AddUser(User user)
+		{
+			using (var conn = new MySqlConnection(GetConnectionString()))
+			{
+				string queryString = "INSERT INTO users (FirstName,LastName,Email,PasswordHash,Role) VALUES(@FirstName,@LastName,@Email,@PasswordHash,@Role)";
+
+				conn.Open();
+				MySqlCommand sqlCmd = new MySqlCommand(queryString, conn);
+				sqlCmd.Prepare();
+				sqlCmd.Parameters.AddWithValue("@FirstName", user.FirstName);
+				sqlCmd.Parameters.AddWithValue("@LastName", user.LastName);
+				sqlCmd.Parameters.AddWithValue("@Email", user.Email);
+				sqlCmd.Parameters.AddWithValue("@PasswordHash", user.PasswordHash);
+				sqlCmd.Parameters.AddWithValue("@Role", user.Role);
+				sqlCmd.ExecuteNonQuery();
+
+				conn.Close();
 			}
 		}
 
