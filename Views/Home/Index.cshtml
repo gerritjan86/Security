@@ -2,6 +2,10 @@
     ViewData["Title"] = "Home Page";
 }
 
+@{ 
+    IEnumerable<System.Security.Claims.Claim> userClaims = User.Claims;
+}
+
 <div class="text-center">
     <h1 class="display-4">Welcome</h1>
 </div>
@@ -12,9 +16,15 @@
 
 @if (User?.Identity?.IsAuthenticated ?? false)
 {
-    <p>
-        <b>Dit ziet alleen een ingelogde gebruiker...</b>
-    </p>
+<p>
+    <b>Dit ziet alleen een ingelogde gebruiker...</b><br />
+    <b>Name: @User.Identity.Name</b><br />
+    <b>AuthType: @User.Identity.AuthenticationType</b><br />
+    <b>element 0 van userClaims list: @userClaims.ElementAt(0).Value</b><br />
+    <b>element 1 van userClaims list: @userClaims.ElementAt(1).Value</b><br />
+    <b>element 2 van userClaims list: @userClaims.ElementAt(2).Value</b><br />
+    <b>element 3 van userClaims list: @userClaims.ElementAt(3).Value</b><br />
+</p>
 }
 
 @if (User?.IsInRole("Admin") ?? false)

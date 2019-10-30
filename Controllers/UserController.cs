@@ -38,7 +38,7 @@ namespace WebAppSecurity.Controllers
 		[HttpPost, ActionName("Login")]
 		public async Task<IActionResult> LoginAsync([Bind("Email,Password")] LoginModel loginModel)
 		{
-			User userDb = _userManager.GetUser(loginModel);
+			User userDb = _userManager.GetUserByLoginModel(loginModel);
 
 			if (!loginModel.Email.Equals(string.Empty) && !loginModel.Password.Equals(string.Empty) && userDb != null && userDb.Id != 0)
 			{
@@ -91,6 +91,7 @@ namespace WebAppSecurity.Controllers
 			}
 		}
 
+		//verwijderen?
 		[Authorize(Roles = "Admin")]
 		[HttpGet]
 		public IActionResult GetAll()
@@ -99,7 +100,7 @@ namespace WebAppSecurity.Controllers
 			return View(users);
 		}
 
-
+		//verwijderen?
 		[Authorize(Roles = "Admin, User")]
 		[HttpGet]
 		public IActionResult ShowUsers()
@@ -107,6 +108,9 @@ namespace WebAppSecurity.Controllers
 			var users = this.GetAllUsers(false);
 			return View(users);
 		}
+
+
+
 
 
 		public List<User> GetAllUsers(bool admin)
@@ -225,6 +229,44 @@ namespace WebAppSecurity.Controllers
 		}
 
 
+		// GET: User/Edit/5
+		[Authorize(Roles = "User")]
+		public IActionResult Edit(int? id)
+		{
+			if (id == null)
+			{
+				return NotFound();
+			}
+
+			User user = _userManager.GetUserById(id ?? 0);
+
+			if (user == null || user.Id == 0)
+			{
+				return NotFound();
+			}
+			return View(user);
+		}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -258,22 +300,7 @@ namespace WebAppSecurity.Controllers
 
 
 
-		// GET: User/Edit/5
-		[Authorize(Roles = "Admin")]
-		public async Task<IActionResult> Edit(int? id)
-        {
-            if (id == null)
-            {
-                return NotFound();
-            }
-
-            var user = await _context.Users.FindAsync(id);
-            if (user == null)
-            {
-                return NotFound();
-            }
-            return View(user);
-        }
+		
 
         // POST: User/Edit/5
         // To protect from overposting attacks, please enable the specific properties you want to bind to, for 

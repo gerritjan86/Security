@@ -39,50 +39,110 @@ namespace WebAppSecurity.DAL
 		}
 
 
-		public User GetUser(LoginModel loginModel)
+		public User GetUserByLoginModel(LoginModel loginModel)
 		{
 			using (var conn = new MySqlConnection(GetConnectionString()))
 			{
-				string queryString = "SELECT * FROM users WHERE Email=@Email";
-
-				conn.Open();
-				MySqlCommand sqlCmd = new MySqlCommand(queryString, conn);
-				sqlCmd.Parameters.AddWithValue("@Email", loginModel.Email);
-				MySqlDataReader rdr = sqlCmd.ExecuteReader(CommandBehavior.SingleRow);
-				var userModel = new User();
-
-				if (rdr.Read())
+				try
 				{
-					userModel.Id = Convert.ToInt32(rdr["Id"]);
-					userModel.Email = rdr["Email"].ToString();
-					userModel.FirstName = rdr["FirstName"].ToString();
-					userModel.LastName = rdr["LastName"].ToString();
-					userModel.PasswordHash = rdr["PasswordHash"].ToString();
-					userModel.Role = rdr["Role"].ToString();
-				}
+					string queryString = "SELECT * FROM users WHERE Email=@Email";
 
-				conn.Close();
-				return userModel;
+					conn.Open();
+					MySqlCommand sqlCmd = new MySqlCommand(queryString, conn);
+					sqlCmd.Parameters.AddWithValue("@Email", loginModel.Email);
+					MySqlDataReader rdr = sqlCmd.ExecuteReader(CommandBehavior.SingleRow);
+					var userModel = new User();
+
+					if (rdr.Read())
+					{
+						userModel.Id = Convert.ToInt32(rdr["Id"]);
+						userModel.Email = rdr["Email"].ToString();
+						userModel.FirstName = rdr["FirstName"].ToString();
+						userModel.LastName = rdr["LastName"].ToString();
+						userModel.PasswordHash = rdr["PasswordHash"].ToString();
+						userModel.Role = rdr["Role"].ToString();
+					}
+
+					conn.Close();
+					return userModel;
+				}
+				finally
+				{
+					if(conn != null)
+					{
+						conn.Close();
+					}
+				}
 			}
 		}
+
+
+		public User GetUserById(int userId)
+		{
+			using (var conn = new MySqlConnection(GetConnectionString()))
+			{
+				try
+				{
+					string queryString = "SELECT * FROM users WHERE Id=@Id";
+
+					conn.Open();
+					MySqlCommand sqlCmd = new MySqlCommand(queryString, conn);
+					sqlCmd.Parameters.AddWithValue("@Id", userId);
+					MySqlDataReader rdr = sqlCmd.ExecuteReader(CommandBehavior.SingleRow);
+					var userModel = new User();
+
+					if (rdr.Read())
+					{
+						userModel.Id = Convert.ToInt32(rdr["Id"]);
+						userModel.Email = rdr["Email"].ToString();
+						userModel.FirstName = rdr["FirstName"].ToString();
+						userModel.LastName = rdr["LastName"].ToString();
+						userModel.PasswordHash = rdr["PasswordHash"].ToString();
+						userModel.Role = rdr["Role"].ToString();
+					}
+
+					return userModel;
+				}
+				finally
+				{
+					if (conn != null)
+					{
+						conn.Close();
+					}
+				}
+			}
+		}
+
+
 
 		public void AddUser(User user)
 		{
 			using (var conn = new MySqlConnection(GetConnectionString()))
 			{
-				string queryString = "INSERT INTO users (FirstName,LastName,Email,PasswordHash,Role) VALUES(@FirstName,@LastName,@Email,@PasswordHash,@Role)";
+				try
+				{
+					string queryString = "INSERT INTO users (FirstName,LastName,Email,PasswordHash,Role) VALUES(@FirstName,@LastName,@Email,@PasswordHash,@Role)";
 
-				conn.Open();
-				MySqlCommand sqlCmd = new MySqlCommand(queryString, conn);
-				sqlCmd.Prepare();
-				sqlCmd.Parameters.AddWithValue("@FirstName", user.FirstName);
-				sqlCmd.Parameters.AddWithValue("@LastName", user.LastName);
-				sqlCmd.Parameters.AddWithValue("@Email", user.Email);
-				sqlCmd.Parameters.AddWithValue("@PasswordHash", user.PasswordHash);
-				sqlCmd.Parameters.AddWithValue("@Role", user.Role);
-				sqlCmd.ExecuteNonQuery();
+					conn.Open();
+					MySqlCommand sqlCmd = new MySqlCommand(queryString, conn);
+					sqlCmd.Prepare();
+					sqlCmd.Parameters.AddWithValue("@FirstName", user.FirstName);
+					sqlCmd.Parameters.AddWithValue("@LastName", user.LastName);
+					sqlCmd.Parameters.AddWithValue("@Email", user.Email);
+					sqlCmd.Parameters.AddWithValue("@PasswordHash", user.PasswordHash);
+					sqlCmd.Parameters.AddWithValue("@Role", user.Role);
+					sqlCmd.ExecuteNonQuery();
 
-				conn.Close();
+					conn.Close();
+				}
+				finally
+				{
+					if (conn != null)
+					{
+						conn.Close();
+					}
+				}
+				
 			}
 		}
 
