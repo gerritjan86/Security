@@ -39,7 +39,8 @@ namespace WebAppSecurity.Controllers
 		[HttpPost, ActionName("Login")]
 		public async Task<IActionResult> LoginAsync([Bind("Email,Password")] LoginModel loginModel)
 		{
-			User userDb = _context.Users.FirstOrDefault(u => u.Email.Equals(loginModel.Email));
+			//User userDb = _context.Users.FirstOrDefault(u => u.Email.Equals(loginModel.Email));
+			User userDb = _userManager.GetUser(loginModel);
 
 			if (userDb == null)
 			{

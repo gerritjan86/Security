@@ -10,6 +10,7 @@ using System.Data;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using System.Security.Claims;
+using MySql.Data.MySqlClient;
 
 namespace WebAppSecurity.DAL
 {
@@ -34,14 +35,14 @@ namespace WebAppSecurity.DAL
 
 		public User GetUser(LoginModel loginModel)
 		{
-			using (var con = new SqlConnection(GetConnectionString()))
+			using (var con = new MySqlConnection(GetConnectionString()))
 			{
 				string queryString = "SELECT Id, Email, FirstName, LastName, PasswordHash, Role FROM users WHERE Email=@Email";
 
 				con.Open();
-				SqlCommand sqlCmd = new SqlCommand(queryString, con);
+				MySqlCommand sqlCmd = new MySqlCommand(queryString, con);
 				sqlCmd.Parameters.AddWithValue("@Email", loginModel.Email);
-				SqlDataReader rdr = sqlCmd.ExecuteReader(CommandBehavior.SingleRow);
+				MySqlDataReader rdr = sqlCmd.ExecuteReader(CommandBehavior.SingleRow);
 				var userModel = new User();
 
 				if (rdr.Read())
