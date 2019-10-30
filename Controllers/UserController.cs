@@ -142,45 +142,59 @@ namespace WebAppSecurity.Controllers
         [HttpPost]
 		[AllowAnonymous]
 		[ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create([Bind("Id,FirstName,LastName,Email,PasswordHash,CaptchaCode")] User user)
+        public async Task<IActionResult> Create([Bind("FirstName,LastName,Email,Password,ControlPassword,CaptchaCode")] RegisterModel registerModel)
         {
             if (ModelState.IsValid)
             {
-				var password = user.PasswordHash;
-				if (ValidatePassword(password))
+				//var password = user.PasswordHash;
+				if(registerModel.Password.Equals(registerModel.ControlPassword))
 				{
-					user.Role = "User";
-					var hasher = new PasswordHasher<User>();
-					user.PasswordHash = hasher.HashPassword(user, password);
-
-					if (Captcha.ValidateCaptchaCode(user.CaptchaCode, HttpContext))
+					if (ValidatePassword(registerModel.Password))
 					{
-						try
+						if (Captcha.ValidateCaptchaCode(registerModel.CaptchaCode, HttpContext))
 						{
-							_context.Add(user);
-							await _context.SaveChangesAsync();
-							return RedirectToAction("UserRegistrationCompleted", "Home");
+							try
+							{
+								User user = new User
+								{
+									CaptchaCode = "AAAA",
+									Email = registerModel.Email,
+									FirstName = registerModel.FirstName,
+									LastName = registerModel.LastName,
+									Role = "User",
+								};
+								var hasher = new PasswordHasher<User>();
+								user.PasswordHash = hasher.HashPassword(user, registerModel.Password);
+
+								_context.Add(user);
+								await _context.SaveChangesAsync();
+								return RedirectToAction("UserRegistrationCompleted", "Home");
+							}
+							catch (Exception)
+							{
+								return View(registerModel);
+							}
 						}
-						catch (Exception)
+						else
 						{
-							return View(user);
+							ModelState.AddModelError(string.Empty, "Wrong Captcha Code. Try again!");
+							return View(registerModel);
 						}
+
 					}
 					else
 					{
-						ModelState.AddModelError(string.Empty, "Wrong Captcha Code. Try again!");
-						return View(user);
+						ModelState.AddModelError(string.Empty, "Password must be at least 8 charachters containing uppercase and lowercase letters and at least one number and one special character!");
+						return View(registerModel);
 					}
-						
 				}
 				else
 				{
-					ModelState.AddModelError(string.Empty, "Password must be at least 8 charachters containing uppercase and lowercase letters and at least one number and one special character!");
-					return View(user);
+					ModelState.AddModelError(string.Empty, "Password and Confirm Password do not match");
+					return View(registerModel);
 				}
-                
             }
-            return View(user);
+            return View(registerModel);
         }
 
 
