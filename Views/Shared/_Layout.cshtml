@@ -39,15 +39,18 @@
                             <a class="nav-link text-dark" asp-area="" asp-controller="User" asp-action="Create">Register</a>
                         </li>
                         @*<li class="nav-item">
-                            <a class="nav-link text-dark" asp-area="" asp-controller="User" asp-action="GetAll">Manage</a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link text-dark" asp-area="" asp-controller="User" asp-action="ShowUsers">ShowUsers</a>
-                        </li>*@
+            <a class="nav-link text-dark" asp-area="" asp-controller="User" asp-action="GetAll">Manage</a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link text-dark" asp-area="" asp-controller="User" asp-action="ShowUsers">ShowUsers</a>
+        </li>*@
                         @if (User?.IsInRole("User") ?? false)
                         {
                             <li class="nav-item">
-                                @Html.ActionLink("Account","Details","User", new { Id = Convert.ToInt32(userClaims.ElementAt(0).Value)}, new { @class = "nav-link text-dark"} )
+                                @Html.ActionLink("Account", "Details", "User", new { Id = Convert.ToInt32(userClaims.ElementAt(0).Value) }, new { @class = "nav-link text-dark" })
+                            </li>
+                            <li class="nav-item">
+                                @Html.ActionLink("Change Password", "EditPassword", "User", new { Id = Convert.ToInt32(userClaims.ElementAt(0).Value) }, new { @class = "nav-link text-dark" })
                             </li>
                         }
                         @if (User?.Identity?.IsAuthenticated ?? false)

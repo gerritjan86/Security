@@ -248,9 +248,10 @@ namespace WebAppSecurity.Controllers
 		}
 
 
-		// GET: User/Edit/5
+		// GET: User/EditPassword/5
 		[Authorize(Roles = "User")]
-		public IActionResult Edit(int? id)
+		[HttpGet]
+		public IActionResult EditPassword(int? id)
 		{
 			if (id == null)
 			{
@@ -263,9 +264,64 @@ namespace WebAppSecurity.Controllers
 			{
 				return NotFound();
 			}
-			return View(user);
+
+			ChangePassword cp = new ChangePassword
+			{
+				Id = user.Id,
+			};
+
+			return View(cp);
 		}
 
+		// Post: User/EditPassword/5
+		[Authorize(Roles = "User")]
+		[HttpPost]
+		public IActionResult EditPassword(int id, [Bind("Id,OldPassword,NewPassword,ConfirmNewPassword")] ChangePassword changePassword)
+		{
+			if (id != changePassword.Id)
+			{
+				return NotFound();
+			}
+
+			if (ValidatePassword(changePassword.NewPassword) == false)
+			{
+				ModelState.AddModelError(string.Empty, "Password must be at least 8 charachters containing uppercase and lowercase letters and at least one number and one special character!");
+				return View(changePassword);
+			}
+
+			if (changePassword.NewPassword.Equals(changePassword.ConfirmNewPassword) == false)
+			{
+				ModelState.AddModelError(string.Empty, "Password and Confirm Password do not match");
+				return View(changePassword);
+			}
+
+			if (ModelState.IsValid)
+			{
+				try
+				{
+					User user = _userManager.GetUserById(changePassword.Id);
+					var hasher = new PasswordHasher<User>();
+					user.PasswordHash = hasher.HashPassword(user, changePassword.NewPassword);
+					changePassword.NewPasswordHash = user.PasswordHash;
+
+					//update database with new the new password hash
+					_userManager.UpdateUserPassword(changePassword);
+				}
+				catch (DbUpdateConcurrencyException)
+				{
+					if (!UserExists(changePassword.Id))
+					{
+						return NotFound();
+					}
+					else
+					{
+						throw;
+					}
+				}
+				return RedirectToAction("ChangedPassword", "Home");
+			}
+			return View(changePassword);
+		}
 
 
 
@@ -371,7 +427,9 @@ namespace WebAppSecurity.Controllers
 
         private bool UserExists(int id)
         {
-            return _context.Users.Any(e => e.Id == id);
+			return _userManager.Getusers().Any(e => e.Id == id);
+			//return _context.Users.Any(e => e.Id == id);
         }
-    }
+
+	}
 }

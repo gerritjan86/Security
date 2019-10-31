@@ -34,6 +34,13 @@ namespace WebAppSecurity.Controllers
 			return View();
 		}
 
+		[AllowAnonymous]
+		[Authorize(Roles = "User")]
+		public IActionResult ChangedPassword()
+		{
+			return View();
+		}
+
 		[Route("get-captcha-image")]
 		public IActionResult GetCaptchaImage()
 		{

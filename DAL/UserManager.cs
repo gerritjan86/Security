@@ -101,6 +101,7 @@ namespace WebAppSecurity.DAL
 						userModel.Role = rdr["Role"].ToString();
 					}
 
+					conn.Close();
 					return userModel;
 				}
 				finally
@@ -113,6 +114,74 @@ namespace WebAppSecurity.DAL
 			}
 		}
 
+
+		public void UpdateUserPassword(ChangePassword changePassword)
+		{
+			using (var conn = new MySqlConnection(GetConnectionString()))
+			{
+				try
+				{
+					string queryString = "UPDATE users SET PasswordHash=@PasswordHash WHERE Id=@Id";
+
+					conn.Open();
+					MySqlCommand sqlCmd = new MySqlCommand(queryString, conn);
+					sqlCmd.Prepare();
+					sqlCmd.Parameters.AddWithValue("@Id", changePassword.Id);
+					sqlCmd.Parameters.AddWithValue("@PasswordHash", changePassword.NewPasswordHash);
+					sqlCmd.ExecuteNonQuery();
+
+					conn.Close();
+				}
+				finally
+				{
+					if (conn != null)
+					{
+						conn.Close();
+					}
+				}
+			}
+		}
+
+
+		public List<User> Getusers()
+		{
+			using (var conn = new MySqlConnection(GetConnectionString()))
+			{
+				try
+				{
+					List<User> userList = new List<User>();
+
+					string queryString = "SELECT * FROM users";
+
+					conn.Open();
+					MySqlCommand sqlCmd = new MySqlCommand(queryString, conn);
+					MySqlDataReader rdr = sqlCmd.ExecuteReader();
+					
+					while (rdr.Read())
+					{
+						var userModel = new User();
+						userModel.Id = Convert.ToInt32(rdr["Id"]);
+						userModel.Email = rdr["Email"].ToString();
+						userModel.FirstName = rdr["FirstName"].ToString();
+						userModel.LastName = rdr["LastName"].ToString();
+						userModel.PasswordHash = rdr["PasswordHash"].ToString();
+						userModel.Role = rdr["Role"].ToString();
+
+						userList.Add(userModel);
+					}
+
+					conn.Close();
+					return userList;
+				}
+				finally
+				{
+					if (conn != null)
+					{
+						conn.Close();
+					}
+				}
+			}
+		}
 
 
 		public void AddUser(User user)
