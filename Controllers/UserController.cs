@@ -24,7 +24,6 @@ namespace WebAppSecurity.Controllers
         }
 
 		//GET User/Login
-		//Login view where user can fill in emailaddress and password
 		[AllowAnonymous]
 		[HttpGet]
 		public IActionResult Login() => View();
@@ -154,7 +153,7 @@ namespace WebAppSecurity.Controllers
         }
 
 
-		//check password requirements
+		//Method to check password requirements
 		private static bool ValidatePassword(string password)
 		{
 			const int MIN_LENGTH = 8;
@@ -188,6 +187,7 @@ namespace WebAppSecurity.Controllers
 
 		// GET: User/Details/5
 		[Authorize(Roles = "User")]
+		[HttpGet]
 		public IActionResult Details(int? id)
 		{
 			if (id == null)
@@ -299,38 +299,34 @@ namespace WebAppSecurity.Controllers
 		}
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 		// GET: User
 		[Authorize(Roles = "Admin")]
-		public async Task<IActionResult> Index()
+		public IActionResult Index()
 		{
-			return View(await _context.Users.ToListAsync());
+			return View(_userManager.Getusers());
 		}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 		// POST: User/Edit/5
@@ -403,7 +399,6 @@ namespace WebAppSecurity.Controllers
         private bool UserExists(int id)
         {
 			return _userManager.Getusers().Any(e => e.Id == id);
-			//return _context.Users.Any(e => e.Id == id);
         }
 
 	}
