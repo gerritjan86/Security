@@ -143,6 +143,36 @@ namespace WebAppSecurity.DAL
 		}
 
 
+		public void UpdateUser(User user)
+		{
+			using (var conn = new MySqlConnection(GetConnectionString()))
+			{
+				try
+				{
+					string queryString = "UPDATE users SET FirstName=@FirstName, LastName=@LastName, Email=@Email WHERE Id=@Id";
+
+					conn.Open();
+					MySqlCommand sqlCmd = new MySqlCommand(queryString, conn);
+					sqlCmd.Prepare();
+					sqlCmd.Parameters.AddWithValue("@Id", user.Id);
+					sqlCmd.Parameters.AddWithValue("@FirstName", user.FirstName);
+					sqlCmd.Parameters.AddWithValue("@LastName", user.LastName);
+					sqlCmd.Parameters.AddWithValue("@Email", user.Email);
+					sqlCmd.ExecuteNonQuery();
+
+					conn.Close();
+				}
+				finally
+				{
+					if (conn != null)
+					{
+						conn.Close();
+					}
+				}
+			}
+		}
+
+
 		public List<User> Getusers()
 		{
 			using (var conn = new MySqlConnection(GetConnectionString()))
