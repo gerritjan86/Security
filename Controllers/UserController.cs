@@ -229,6 +229,25 @@ namespace WebAppSecurity.Controllers
 		}
 
 
+		// GET: User/Details/5
+		[Authorize(Roles = "User")]
+		public IActionResult Details(int? id)
+		{
+			if (id == null)
+			{
+				return NotFound();
+			}
+
+			User user = _userManager.GetUserById(id ?? 0);
+
+			if (user == null || user.Id == 0)
+			{
+				return NotFound();
+			}
+			return View(user);
+		}
+
+
 		// GET: User/Edit/5
 		[Authorize(Roles = "User")]
 		public IActionResult Edit(int? id)
@@ -272,6 +291,9 @@ namespace WebAppSecurity.Controllers
 
 
 
+
+
+
 		// GET: User
 		[Authorize(Roles = "Admin")]
 		public async Task<IActionResult> Index()
@@ -279,33 +301,11 @@ namespace WebAppSecurity.Controllers
 			return View(await _context.Users.ToListAsync());
 		}
 
-		// GET: User/Details/5
-		[Authorize(Roles = "Admin")]
-		public async Task<IActionResult> Details(int? id)
-		{
-			if (id == null)
-			{
-				return NotFound();
-			}
 
-			var user = await _context.Users
-				.FirstOrDefaultAsync(m => m.Id == id);
-			if (user == null)
-			{
-				return NotFound();
-			}
-
-			return View(user);
-		}
-
-
-
-		
-
-        // POST: User/Edit/5
-        // To protect from overposting attacks, please enable the specific properties you want to bind to, for 
-        // more details see http://go.microsoft.com/fwlink/?LinkId=317598.
-        [HttpPost]
+		// POST: User/Edit/5
+		// To protect from overposting attacks, please enable the specific properties you want to bind to, for 
+		// more details see http://go.microsoft.com/fwlink/?LinkId=317598.
+		[HttpPost]
         [ValidateAntiForgeryToken]
 		[Authorize(Roles = "Admin")]
 		public async Task<IActionResult> Edit(int id, [Bind("Id,FirstName,LastName,Email,PasswordHash")] User user)
