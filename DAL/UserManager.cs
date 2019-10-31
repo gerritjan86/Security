@@ -173,6 +173,33 @@ namespace WebAppSecurity.DAL
 		}
 
 
+		public void DeleteUser(User user)
+		{
+			using (var conn = new MySqlConnection(GetConnectionString()))
+			{
+				try
+				{
+					string queryString = "DELETE FROM users WHERE Id=@Id";
+
+					conn.Open();
+					MySqlCommand sqlCmd = new MySqlCommand(queryString, conn);
+					sqlCmd.Prepare();
+					sqlCmd.Parameters.AddWithValue("@Id", user.Id);
+					sqlCmd.ExecuteNonQuery();
+
+					conn.Close();
+				}
+				finally
+				{
+					if (conn != null)
+					{
+						conn.Close();
+					}
+				}
+			}
+		}
+
+
 		public List<User> Getusers()
 		{
 			using (var conn = new MySqlConnection(GetConnectionString()))

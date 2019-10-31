@@ -365,56 +365,38 @@ namespace WebAppSecurity.Controllers
         }
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 		// GET: User/Delete/5
 		[Authorize(Roles = "Admin")]
-		public async Task<IActionResult> Delete(int? id)
+		public IActionResult Delete(int? id)
         {
             if (id == null)
             {
                 return NotFound();
             }
 
-            var user = await _context.Users
-                .FirstOrDefaultAsync(m => m.Id == id);
-            if (user == null)
-            {
-                return NotFound();
-            }
+			User user = _userManager.GetUserById(id ?? 0);
 
-            return View(user);
-        }
+			if (user == null || user.Id == 0)
+			{
+				return NotFound();
+			}
+
+			return View(user);
+		}
+
 
         // POST: User/Delete/5
         [HttpPost, ActionName("Delete")]
         [ValidateAntiForgeryToken]
 		[Authorize(Roles = "Admin")]
-		public async Task<IActionResult> DeleteConfirmed(int id)
+		public IActionResult DeleteConfirmed(int id)
         {
-            var user = await _context.Users.FindAsync(id);
-            _context.Users.Remove(user);
-            await _context.SaveChangesAsync();
+			User user = _userManager.GetUserById(id);
+			_userManager.DeleteUser(user);
             return RedirectToAction(nameof(Index));
         }
+
+
 
         private bool UserExists(int id)
         {
