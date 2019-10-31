@@ -4,10 +4,8 @@ using System.Linq;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using WebAppSecurity.DAL;
 using WebAppSecurity.Models;
@@ -86,48 +84,7 @@ namespace WebAppSecurity.Controllers
 			}
 			else
 			{
-				ModelState.AddModelError(string.Empty, "Strange...");
 				return RedirectToAction("LoggedIn", "Home");
-			}
-		}
-
-		//verwijderen?
-		[Authorize(Roles = "Admin")]
-		[HttpGet]
-		public IActionResult GetAll()
-		{
-			var users = this.GetAllUsers(true);
-			return View(users);
-		}
-
-		//verwijderen?
-		[Authorize(Roles = "Admin, User")]
-		[HttpGet]
-		public IActionResult ShowUsers()
-		{
-			var users = this.GetAllUsers(false);
-			return View(users);
-		}
-
-
-
-
-
-		public List<User> GetAllUsers(bool admin)
-		{
-			if (admin)
-			{
-				var userList = from user in _context.Users
-							   select new User { FirstName = user.FirstName, LastName = user.LastName, Email = user.Email, Role = user.Role };
-				var users = userList.ToList<User>();
-				return users;
-			}
-			else
-			{
-				var userList = from user in _context.Users
-							   select new User { FirstName = user.FirstName, LastName = user.LastName };
-				var users = userList.ToList<User>();
-				return users;
 			}
 		}
 
@@ -238,6 +195,12 @@ namespace WebAppSecurity.Controllers
 				return NotFound();
 			}
 
+			IEnumerable<System.Security.Claims.Claim> userClaims = User.Claims;
+			if (id != Convert.ToInt32(userClaims.ElementAt(0).Value))
+			{
+				return Forbid();
+			}
+
 			User user = _userManager.GetUserById(id ?? 0);
 
 			if (user == null || user.Id == 0)
@@ -256,6 +219,12 @@ namespace WebAppSecurity.Controllers
 			if (id == null)
 			{
 				return NotFound();
+			}
+
+			IEnumerable<System.Security.Claims.Claim> userClaims = User.Claims;
+			if (id != Convert.ToInt32(userClaims.ElementAt(0).Value))
+			{
+				return Forbid();
 			}
 
 			User user = _userManager.GetUserById(id ?? 0);
@@ -278,6 +247,12 @@ namespace WebAppSecurity.Controllers
 		[HttpPost]
 		public IActionResult EditPassword(int id, [Bind("Id,OldPassword,NewPassword,ConfirmNewPassword")] ChangePassword changePassword)
 		{
+			IEnumerable<System.Security.Claims.Claim> userClaims = User.Claims;
+			if (id != Convert.ToInt32(userClaims.ElementAt(0).Value))
+			{
+				return Forbid();
+			}
+
 			if (id != changePassword.Id)
 			{
 				return NotFound();
