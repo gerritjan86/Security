@@ -299,13 +299,33 @@ namespace WebAppSecurity.Controllers
 		}
 
 
-		// GET: User
+		// GET: User/Index
+		// Returns view with all users. Page only accessible for Admin.
 		[Authorize(Roles = "Admin")]
 		public IActionResult Index()
 		{
 			return View(_userManager.Getusers());
 		}
 
+		// GET: User/Edit/5
+		[Authorize(Roles = "Admin")]
+		[HttpGet]
+		public IActionResult Edit(int? id)
+		{
+			if (id == null)
+			{
+				return NotFound();
+			}
+
+			User user = _userManager.GetUserById(id ?? 0);
+
+			if (user == null || user.Id == 0)
+			{
+				return NotFound();
+			}
+
+			return View(user);
+		}
 
 
 
