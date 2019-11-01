@@ -244,6 +244,7 @@ namespace WebAppSecurity.Controllers
 
 		// Post: User/EditPassword/5
 		[Authorize(Roles = "User")]
+		[ValidateAntiForgeryToken]
 		[HttpPost]
 		public IActionResult EditPassword(int id, [Bind("Id,OldPassword,NewPassword,ConfirmNewPassword")] ChangePassword changePassword)
 		{
@@ -274,7 +275,7 @@ namespace WebAppSecurity.Controllers
 			{
 				try
 				{
-					User user = _userManager.GetUserById(changePassword.Id);
+					User user = new User();
 					var hasher = new PasswordHasher<User>();
 					user.PasswordHash = hasher.HashPassword(user, changePassword.NewPassword);
 					changePassword.NewPasswordHash = user.PasswordHash;
