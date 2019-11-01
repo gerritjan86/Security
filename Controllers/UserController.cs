@@ -38,6 +38,7 @@ namespace WebAppSecurity.Controllers
 		{
 			if(model.Email.Equals(string.Empty) || model.Password.Equals(string.Empty) || model.Email.Equals("") || model.Password.Equals(""))
 			{
+				_logger.LogWarning("Login failed because of empty emailaddress and/or empty password");
 				ModelState.AddModelError(string.Empty, "Try again!");
 				return View(model);
 			}
@@ -46,6 +47,7 @@ namespace WebAppSecurity.Controllers
 
 			if (userDb == null || userDb.Id == 0)
 			{
+				_logger.LogWarning("Login failed. No user found for emailaddress: {email}", model.Email);
 				ModelState.AddModelError(string.Empty, "Try again!");
 				return View(model);
 			}
@@ -55,6 +57,7 @@ namespace WebAppSecurity.Controllers
 			
 			if (verificationResult != PasswordVerificationResult.Success)
 			{
+				_logger.LogWarning("Login failed because of wrong password. User id: {id}", userDb.Id);
 				ModelState.AddModelError(string.Empty, "Try again!");
 				return View(model);
 			}
@@ -66,6 +69,7 @@ namespace WebAppSecurity.Controllers
 					bool signIn = await _userManager.SignIn(HttpContext, userDb);
 					if (signIn)
 					{
+						_logger.LogInformation("Login with user id: {id}", userDb.Id.ToString());
 						return RedirectToAction("LoggedIn", "Home");
 					}
 					else
@@ -74,8 +78,9 @@ namespace WebAppSecurity.Controllers
 						return View(model);
 					}
 				}
-				catch (Exception)
+				catch (Exception ex)
 				{
+					_logger.LogWarning(ex, "Login led to exception for user with id: {id}", userDb.Id);
 					ModelState.AddModelError(string.Empty, "Try again!");
 					return View(model);
 				}
@@ -87,13 +92,16 @@ namespace WebAppSecurity.Controllers
 
 		public async Task<IActionResult> Logout()
 		{
+			IEnumerable<System.Security.Claims.Claim> userClaims = User.Claims;
 			bool signOut = await _userManager.SignOut(HttpContext);
 			if (signOut)
 			{
+				_logger.LogInformation("Logout for user id: {id}", userClaims.ElementAt(0).Value);
 				return RedirectToAction("LoggedOut", "Home");
 			}
 			else
 			{
+				_logger.LogWarning("Logout failde for user id: {id}", userClaims.ElementAt(0).Value);
 				return RedirectToAction("LoggedIn", "Home");
 			}
 		}
@@ -107,60 +115,63 @@ namespace WebAppSecurity.Controllers
         }
 
 
-        // POST: User/Create
-        // To protect from overposting attacks, please enable the specific properties you want to bind to, for 
-        // more details see http://go.microsoft.com/fwlink/?LinkId=317598.
-        [HttpPost]
+		// POST: User/Create
+		// To protect from overposting attacks, please enable the specific properties you want to bind to, for 
+		// more details see http://go.microsoft.com/fwlink/?LinkId=317598.
+		[HttpPost]
 		[AllowAnonymous]
 		[ValidateAntiForgeryToken]
-        public IActionResult Create([Bind("FirstName,LastName,Email,Password,ControlPassword,CaptchaCode")] RegisterModel registerModel)
+		public IActionResult Create([Bind("FirstName,LastName,Email,Password,ControlPassword,CaptchaCode")] RegisterModel registerModel)
 		{
-            if (ModelState.IsValid)
-            {
-				if(registerModel.Password.Equals(registerModel.ControlPassword))
+			if (ModelState.IsValid == false)
+			{
+				_logger.LogWarning("Register user failed because of invalid ModelState");
+				return View(registerModel);
+			}
+
+			if (registerModel.Password.Equals(registerModel.ControlPassword) == false)
+			{
+				_logger.LogInformation("Register user failed because of mismatch between password and confirm password");
+				ModelState.AddModelError(string.Empty, "Password and Confirm Password do not match");
+				return View(registerModel);
+			}
+
+			if (ValidatePassword(registerModel.Password) == false)
+			{
+				_logger.LogInformation("Register user failed because of password requirements that were not met");
+				ModelState.AddModelError(string.Empty, "Password must be at least 8 charachters containing uppercase and lowercase letters and at least one number and one special character!");
+				return View(registerModel);
+			}
+
+
+			if (Captcha.ValidateCaptchaCode(registerModel.CaptchaCode, HttpContext))
+			{
+				try
 				{
-					if (ValidatePassword(registerModel.Password))
+					User user = new User
 					{
-						if (Captcha.ValidateCaptchaCode(registerModel.CaptchaCode, HttpContext))
-						{
-							try
-							{
-								User user = new User
-								{
-									FirstName = registerModel.FirstName,
-									LastName = registerModel.LastName,
-									Email = registerModel.Email,
-									Role = "User",
-								};
-								var hasher = new PasswordHasher<User>();
-								user.PasswordHash = hasher.HashPassword(user, registerModel.Password);
-								_userManager.AddUser(user);
-								return RedirectToAction("UserRegistrationCompleted", "Home");
-							}
-							catch (Exception)
-							{
-								return View(registerModel);
-							}
-						}
-						else
-						{
-							ModelState.AddModelError(string.Empty, "Wrong Captcha Code. Try again!");
-							return View(registerModel);
-						}
-					}
-					else
-					{
-						ModelState.AddModelError(string.Empty, "Password must be at least 8 charachters containing uppercase and lowercase letters and at least one number and one special character!");
-						return View(registerModel);
-					}
+						FirstName = registerModel.FirstName,
+						LastName = registerModel.LastName,
+						Email = registerModel.Email,
+						Role = "User",
+					};
+					var hasher = new PasswordHasher<User>();
+					user.PasswordHash = hasher.HashPassword(user, registerModel.Password);
+					_userManager.AddUser(user);
+					_logger.LogInformation("Registered new user with emailaddress: {email}", registerModel.Email);
+					return RedirectToAction("UserRegistrationCompleted", "Home");
 				}
-				else
+				catch (Exception)
 				{
-					ModelState.AddModelError(string.Empty, "Password and Confirm Password do not match");
 					return View(registerModel);
 				}
-            }
-            return View(registerModel);
+			}
+			else
+			{
+				_logger.LogInformation("Register user failed because of wrong captcha code");
+				ModelState.AddModelError(string.Empty, "Wrong Captcha Code. Try again!");
+				return View(registerModel);
+			}		
         }
 
 
@@ -209,6 +220,7 @@ namespace WebAppSecurity.Controllers
 			IEnumerable<System.Security.Claims.Claim> userClaims = User.Claims;
 			if (id != Convert.ToInt32(userClaims.ElementAt(0).Value))
 			{
+				_logger.LogInformation("User Details GET. User with id {a} tried to acces details of user with id {b}", userClaims.ElementAt(0).Value, id.ToString());
 				return Forbid();
 			}
 
@@ -216,6 +228,7 @@ namespace WebAppSecurity.Controllers
 
 			if (user == null || user.Id == 0)
 			{
+				_logger.LogInformation("User Details GET. GetUserById with id {a} led to a null-user or a user with id equal to 0.", id.ToString());
 				return NotFound();
 			}
 			return View(user);
@@ -235,6 +248,7 @@ namespace WebAppSecurity.Controllers
 			IEnumerable<System.Security.Claims.Claim> userClaims = User.Claims;
 			if (id != Convert.ToInt32(userClaims.ElementAt(0).Value))
 			{
+				_logger.LogInformation("Edit Password GET. User with id {a} tried to change password for user with id {b}", userClaims.ElementAt(0).Value, id.ToString());
 				return Forbid();
 			}
 
@@ -242,6 +256,7 @@ namespace WebAppSecurity.Controllers
 
 			if (user == null || user.Id == 0)
 			{
+				_logger.LogInformation("Edit Password GET. GetUserById with id {a} led to a null-user or a user with id equal to 0.", id.ToString());
 				return NotFound();
 			}
 
@@ -262,22 +277,26 @@ namespace WebAppSecurity.Controllers
 			IEnumerable<System.Security.Claims.Claim> userClaims = User.Claims;
 			if (id != Convert.ToInt32(userClaims.ElementAt(0).Value))
 			{
+				_logger.LogInformation("Edit Password POST. User with id {a} tried to change password for user with id {b}", userClaims.ElementAt(0).Value, id.ToString());
 				return Forbid();
 			}
 
 			if (id != changePassword.Id)
 			{
+				_logger.LogInformation("Edit Password POST. Route value for id ({a}) differs from changePassword.Id ({b})", id.ToString(), changePassword.Id.ToString());
 				return NotFound();
 			}
 
 			if (ValidatePassword(changePassword.NewPassword) == false)
 			{
+				_logger.LogInformation("Edit Password POST. New password does not meet password requirements. User id is {a} ", changePassword.Id.ToString());
 				ModelState.AddModelError(string.Empty, "Password must be at least 8 charachters containing uppercase and lowercase letters and at least one number and one special character!");
 				return View(changePassword);
 			}
 
 			if (changePassword.NewPassword.Equals(changePassword.ConfirmNewPassword) == false)
 			{
+				_logger.LogInformation("Edit Password POST. New password does not match with confirm new password. User id is {a} ", changePassword.Id.ToString());
 				ModelState.AddModelError(string.Empty, "Password and Confirm Password do not match");
 				return View(changePassword);
 			}
@@ -293,6 +312,7 @@ namespace WebAppSecurity.Controllers
 
 					//update database with new the new password hash
 					_userManager.UpdateUserPassword(changePassword);
+					_logger.LogInformation("Edit password POST. User (id: {a}) changed password.", changePassword.Id.ToString());
 				}
 				catch (DbUpdateConcurrencyException)
 				{
@@ -326,6 +346,7 @@ namespace WebAppSecurity.Controllers
 		{
 			if (id == null)
 			{
+				_logger.LogInformation("User Edit GET. Id is null does not work!");
 				return NotFound();
 			}
 
@@ -333,6 +354,7 @@ namespace WebAppSecurity.Controllers
 
 			if (user == null || user.Id == 0)
 			{
+				_logger.LogInformation("User Edit GET. GetUserById wiht id {a} led to a null-user or user with id 0.", id.ToString());
 				return NotFound();
 			}
 
@@ -350,6 +372,7 @@ namespace WebAppSecurity.Controllers
         {
             if (id != user.Id)
             {
+				_logger.LogInformation("User Edit POST. Route value id ({a}) different from user id ({b})", id.ToString(), user.Id.ToString());
                 return NotFound();
             }
 
@@ -358,13 +381,14 @@ namespace WebAppSecurity.Controllers
                 try
                 {
 					_userManager.UpdateUser(user);
-
+					_logger.LogInformation("User Edit POST. Updated FirstName, LastName, Email for user with id: {}", user.Id.ToString());
                 }
                 catch (DbUpdateConcurrencyException)
                 {
                     if (!UserExists(user.Id))
                     {
-                        return NotFound();
+						_logger.LogInformation("User Edit POST. Something went wrong with updating the user");
+						return NotFound();
                     }
                     else
                     {
@@ -383,13 +407,15 @@ namespace WebAppSecurity.Controllers
         {
             if (id == null)
             {
-                return NotFound();
+				_logger.LogInformation("User Delete GET. Id is null does not work!");
+				return NotFound();
             }
 
 			User user = _userManager.GetUserById(id ?? 0);
 
 			if (user == null || user.Id == 0)
 			{
+				_logger.LogInformation("User Edit GET. GetUserById wiht id {a} led to a null-user or user with id 0.", id.ToString());
 				return NotFound();
 			}
 
@@ -405,6 +431,7 @@ namespace WebAppSecurity.Controllers
         {
 			User user = _userManager.GetUserById(id);
 			_userManager.DeleteUser(user);
+			_logger.LogInformation("Deleted user with id: {id}", id.ToString());
             return RedirectToAction(nameof(Index));
         }
 
