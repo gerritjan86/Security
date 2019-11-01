@@ -16,12 +16,11 @@ namespace WebAppSecurity.Controllers
 {
     public class UserController : Controller
     {
-		private readonly UserManager _userManager; 
+		private readonly UserManager _userManager = new UserManager();
 		private readonly ILogger _logger;
 
-		public UserController(UserManager userManager, ILogger<UserController> logger)
+		public UserController(ILogger<UserController> logger) 
         {
-			_userManager = userManager;
 			_logger = logger;
         }
 
@@ -35,45 +34,55 @@ namespace WebAppSecurity.Controllers
 		[AllowAnonymous]
 		[ValidateAntiForgeryToken]
 		[HttpPost, ActionName("Login")]
-		public async Task<IActionResult> LoginAsync([Bind("Email,Password")] LoginModel loginModel)
+		public async Task<IActionResult> LoginAsync([Bind("Email,Password")] LoginModel model)
 		{
-			User userDb = _userManager.GetUserByLoginModel(loginModel);
-
-			if (!loginModel.Email.Equals(string.Empty) && !loginModel.Password.Equals(string.Empty) && userDb != null && userDb.Id != 0)
+			if(model.Email.Equals(string.Empty) || model.Password.Equals(string.Empty) || model.Email.Equals("") || model.Password.Equals(""))
 			{
-				PasswordHasher<User> passwordHasher = new PasswordHasher<User>();
-				PasswordVerificationResult verificationResult = passwordHasher.VerifyHashedPassword(userDb, userDb.PasswordHash, loginModel.Password);
+				ModelState.AddModelError(string.Empty, "Try again!");
+				return View(model);
+			}
 
-				if (verificationResult == PasswordVerificationResult.Success)
+			User userDb = _userManager.GetUserByLoginModel(model);
+
+			if (userDb == null || userDb.Id == 0)
+			{
+				ModelState.AddModelError(string.Empty, "Try again!");
+				return View(model);
+			}
+
+			PasswordHasher<User> passwordHasher = new PasswordHasher<User>();
+			PasswordVerificationResult verificationResult = passwordHasher.VerifyHashedPassword(userDb, userDb.PasswordHash, model.Password);
+			
+			if (verificationResult != PasswordVerificationResult.Success)
+			{
+				ModelState.AddModelError(string.Empty, "Try again!");
+				return View(model);
+			}
+
+			if (verificationResult == PasswordVerificationResult.Success)
+			{
+				try
 				{
-					try
+					bool signIn = await _userManager.SignIn(HttpContext, userDb);
+					if (signIn)
 					{
-						bool signIn = await _userManager.SignIn(HttpContext, userDb);
-						if (signIn)
-						{
-							return RedirectToAction("LoggedIn", "Home");
-						}
-						else
-						{
-							ModelState.AddModelError(string.Empty, "Try again!");
-							return View(loginModel);
-						}
+						return RedirectToAction("LoggedIn", "Home");
 					}
-					catch (Exception)
+					else
 					{
 						ModelState.AddModelError(string.Empty, "Try again!");
-						return View(loginModel);
+						return View(model);
 					}
 				}
-				else
+				catch (Exception)
 				{
 					ModelState.AddModelError(string.Empty, "Try again!");
-					return View(loginModel);
+					return View(model);
 				}
 			}
 
 			ModelState.AddModelError(string.Empty, "Try again!");
-			return View(loginModel);
+			return View(model);
 		}
 
 		public async Task<IActionResult> Logout()
