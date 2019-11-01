@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 using WebAppSecurity.DAL;
 using WebAppSecurity.Models;
 using WebAppSecurity.Models.Captcha;
@@ -15,12 +16,13 @@ namespace WebAppSecurity.Controllers
 {
     public class UserController : Controller
     {
-        private readonly SecurityContext _context;
-		private readonly UserManager _userManager = new UserManager(); //DAL
+		private readonly UserManager _userManager; 
+		private readonly ILogger _logger;
 
-        public UserController(SecurityContext context)
+		public UserController(UserManager userManager, ILogger<UserController> logger)
         {
-            _context = context;
+			_userManager = userManager;
+			_logger = logger;
         }
 
 		//GET User/Login
