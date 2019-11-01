@@ -14,6 +14,7 @@ using WebAppSecurity.DAL;
 using Pomelo.EntityFrameworkCore.MySql;
 using Pomelo.EntityFrameworkCore.MySql.Infrastructure;
 using Microsoft.AspNetCore.Authentication.Cookies;
+using WebAppSecurity.Models;
 
 namespace WebAppSecurity
 {
@@ -66,7 +67,7 @@ namespace WebAppSecurity
 		}
 
 		// This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
-		public void Configure(IApplicationBuilder app, IHostingEnvironment env)
+		public void Configure(IApplicationBuilder app, IHostingEnvironment env, SecurityContext context)
 		{
 			if (env.IsDevelopment())
 			{
@@ -93,6 +94,7 @@ namespace WebAppSecurity
 					name: "default",
 					template: "{controller=Home}/{action=Index}/{id?}");
 			});
+			SeedData.Initialize(context);
 		}
 	}
 }
