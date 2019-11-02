@@ -39,7 +39,7 @@ namespace WebAppSecurity.Controllers
 			if(model.Email.Equals(string.Empty) || model.Password.Equals(string.Empty) || model.Email.Equals("") || model.Password.Equals(""))
 			{
 				_logger.LogWarning("Login failed because of empty emailaddress and/or empty password");
-				ModelState.AddModelError(string.Empty, "Try again!");
+				ModelState.AddModelError(string.Empty, "Login failed: Invalid email or password");
 				return View(model);
 			}
 
@@ -48,7 +48,7 @@ namespace WebAppSecurity.Controllers
 			if (userDb == null || userDb.Id == 0)
 			{
 				_logger.LogWarning("Login failed. No user found for emailaddress: {email}", model.Email);
-				ModelState.AddModelError(string.Empty, "Try again!");
+				ModelState.AddModelError(string.Empty, "Login failed: Invalid email or password");
 				return View(model);
 			}
 
@@ -58,7 +58,7 @@ namespace WebAppSecurity.Controllers
 			if (verificationResult != PasswordVerificationResult.Success)
 			{
 				_logger.LogWarning("Login failed because of wrong password. User id: {id}", userDb.Id);
-				ModelState.AddModelError(string.Empty, "Try again!");
+				ModelState.AddModelError(string.Empty, "Login failed: Invalid email or password");
 				return View(model);
 			}
 
@@ -74,19 +74,19 @@ namespace WebAppSecurity.Controllers
 					}
 					else
 					{
-						ModelState.AddModelError(string.Empty, "Try again!");
+						ModelState.AddModelError(string.Empty, "Login failed: Invalid email or password");
 						return View(model);
 					}
 				}
 				catch (Exception ex)
 				{
 					_logger.LogWarning(ex, "Login led to exception for user with id: {id}", userDb.Id);
-					ModelState.AddModelError(string.Empty, "Try again!");
+					ModelState.AddModelError(string.Empty, "Login failed: Invalid email or password");
 					return View(model);
 				}
 			}
 
-			ModelState.AddModelError(string.Empty, "Try again!");
+			ModelState.AddModelError(string.Empty, "Login failed: Invalid email or password");
 			return View(model);
 		}
 
