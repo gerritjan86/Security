@@ -14,7 +14,7 @@
             <span aria-hidden="true">Accept</span>
         </button>
     </div>
-    <script>
+    <script asp-add-nonce="true">
         (function () {
             var button = document.querySelector("#cookieConsent button[data-cookie-string]");
             button.addEventListener("click", function (event) {

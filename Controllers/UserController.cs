@@ -111,6 +111,7 @@ namespace WebAppSecurity.Controllers
 		[AllowAnonymous]
 		public IActionResult Create()
         {
+			ViewData["test"] = HttpContext.Session.Id;
 			return View();
         }
 

@@ -15,6 +15,7 @@ using Pomelo.EntityFrameworkCore.MySql;
 using Pomelo.EntityFrameworkCore.MySql.Infrastructure;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using WebAppSecurity.Models;
+using Joonasw.AspNetCore.SecurityHeaders;
 
 namespace WebAppSecurity
 {
@@ -55,13 +56,23 @@ namespace WebAppSecurity
 					});
 
 
-			// Need this service for the Captcha to work
+			// Need this service for Session Id and for the Captcha to work
 			services.AddSession(options =>
 			{
 				options.IdleTimeout = TimeSpan.FromMinutes(20);
 				options.Cookie.HttpOnly = true;
 			});
 			services.AddMemoryCache();
+
+			services.AddCors(options =>
+			{
+				options.AddPolicy("MyPolicy", builder =>
+				{
+					builder.WithOrigins("https://localhost:44322", "https://localhost:5001", "https://145.44.234.246");
+				});
+			});
+
+			services.AddCsp(nonceByteAmount: 32);
 
 			services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Version_2_2);
 		}
@@ -77,10 +88,23 @@ namespace WebAppSecurity
 			{
 				app.UseExceptionHandler("/Home/Error");
 				// The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
-				app.UseHsts();
+				app.UseHsts(new Joonasw.AspNetCore.SecurityHeaders.HstsOptions(TimeSpan.FromDays(30), includeSubDomains: false, preload: false));
 			}
 
 			ConnectionString = Configuration.GetConnectionString("DefaultConnectionMaria");
+
+			app.UseCors("MyPolicy");
+			app.UseCsp(csp =>
+			{
+				csp.AllowScripts
+					.FromSelf()
+					.From("https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.bundle.min.js")
+					.From("https://cdnjs.cloudflare.com/ajax/libs/jquery/3.3.1/jquery.min.js")
+					.From("https://cdnjs.cloudflare.com/ajax/libs/jquery-validate/1.17.0/jquery.validate.min.js")
+					.From("https://cdnjs.cloudflare.com/ajax/libs/jquery-validation-unobtrusive/3.2.11/jquery.validate.unobtrusive.min.js")
+					.AddNonce(); //this domain
+
+			});
 
 			app.UseHttpsRedirection();
 			app.UseStaticFiles();
